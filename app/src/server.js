@@ -3,6 +3,7 @@
  * Routes:
  *   GET /            → greeting (optional ?name= query parameter)
  *   GET /health      → JSON health payload with build metadata
+ *   GET /version     → JSON version payload with build metadata + runtime
  */
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -37,7 +38,7 @@ export const server = createServer((req, res) => {
   if (url.pathname === "/version") {
     const { version, sha } = healthPayload(buildInfo);
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ version, sha }));
+    res.end(JSON.stringify({ version, sha, node: process.version }));
     return;
   }
 

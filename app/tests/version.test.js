@@ -30,7 +30,7 @@ test("GET /version returns fallback metadata when build info is missing", async 
 
   assert.equal(res.status, 200);
   assert.equal(res.headers.get("content-type"), "application/json");
-  assert.deepEqual(json, { version: "dev", sha: "local" });
+  assert.deepEqual(json, { version: "dev", sha: "local", node: process.version });
 });
 
 test("GET /version returns metadata from build-info.json", async () => {
@@ -45,7 +45,11 @@ test("GET /version returns metadata from build-info.json", async () => {
 
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("content-type"), "application/json");
-    assert.deepEqual(json, { version: "1.2.3+99", sha: "abc1234" });
+    assert.deepEqual(json, {
+      version: "1.2.3+99",
+      sha: "abc1234",
+      node: process.version,
+    });
   } finally {
     await rm(buildInfoPath, { force: true });
   }
