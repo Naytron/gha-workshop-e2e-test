@@ -1,0 +1,32 @@
+name: AI Hello
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Ask the model
+        id: ai
+        uses: actions/ai-inference@2c43c91ae16266ca159d311430343c67a5ffa222 # v3
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        with:
+          model: gpt-4.1
+          prompt: |
+            In one sentence, explain what a GitHub Actions runner is.
+
+      - name: Print the response
+        env:
+          RESPONSE: ${{ steps.ai.outputs.response }}
+        run: echo "$RESPONSE"
