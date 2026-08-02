@@ -1,0 +1,35 @@
+name: Try Custom Actions
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  try-them-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Composite
+        id: composite
+        uses: ./actions/hello-composite
+        with:
+          name: ${{ github.actor }}
+
+      - name: JavaScript
+        id: js
+        uses: ./actions/hello-javascript
+        with:
+          name: ${{ github.actor }}
+
+      - name: Docker
+        id: docker
+        uses: ./actions/hello-docker
+        with:
+          name: ${{ github.actor }}
+
+      - name: Collect the outputs
+        run: |
+          echo "composite said: ${{ steps.composite.outputs.greeting }}"
+          echo "javascript said: ${{ steps.js.outputs.greeting }}"
+          echo "docker said:     ${{ steps.docker.outputs.greeting }}"
