@@ -34,6 +34,13 @@ export const server = createServer((req, res) => {
     return;
   }
 
+  if (url.pathname === "/version") {
+    const { version, sha } = healthPayload(buildInfo);
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ version, sha }));
+    return;
+  }
+
   if (url.pathname === "/") {
     res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
     res.end(buildGreeting(url.searchParams.get("name")));
