@@ -3,6 +3,7 @@ on: workflow_dispatch
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   file-issue:
