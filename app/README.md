@@ -9,3 +9,5 @@ A deliberately tiny Node.js HTTP service — the CI/CD target for every lab in t
 - **Container:** `docker build -t workshop-app .` — multi-stage, non-root, healthchecked (see [Dockerfile](Dockerfile)).
 
 Requires Node.js 22 or newer.
+
+Lab 2 PR test.
