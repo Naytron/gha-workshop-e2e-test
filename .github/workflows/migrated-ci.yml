@@ -35,7 +35,8 @@ jobs:
         run: npm test
       - name: Pipeline finished (post always)
         if: always()
-        run: echo "Pipeline finished with status: ${{ job.status }}"
+        run: |
+          echo "Pipeline finished with status: ${{ job.status }}"
 
   build:
     name: Build
@@ -63,4 +64,5 @@ jobs:
           path: app/dist/
       - name: Pipeline finished (post always)
         if: always()
-        run: echo "Pipeline finished with status: ${{ job.status }}"
+        run: |
+          echo "Pipeline finished with status: ${{ job.status }}"
