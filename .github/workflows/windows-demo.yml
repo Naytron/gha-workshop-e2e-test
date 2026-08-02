@@ -1,0 +1,13 @@
+name: Windows Runner Demo
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  windows-env:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - name: Show environment (PowerShell is the default shell)
+        run: Get-ChildItem Env: | Select-Object -First 5
