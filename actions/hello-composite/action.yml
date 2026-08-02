@@ -9,12 +9,19 @@ inputs:
     description: "Who to greet"
     required: false
     default: "world"
+  shout:
+    description: "Uppercase the greeting"
+    required: false
+    default: "false"
 
 outputs:
   greeting:
     description: "The full greeting that was produced"
     # Composite actions must map outputs from a step explicitly:
     value: ${{ steps.build-greeting.outputs.greeting }}
+  greeted-at:
+    description: "UTC timestamp when the greeting was produced"
+    value: ${{ steps.build-greeting.outputs.greeted-at }}
 
 runs:
   using: "composite"
@@ -24,8 +31,12 @@ runs:
       shell: bash # every run step in a composite action MUST declare its shell
       run: |
         greeting="Hello, ${{ inputs.name }}, from a composite action!"
+        if [ "${{ inputs.shout }}" = "true" ]; then
+          greeting=$(echo "$greeting" | tr '[:lower:]' '[:upper:]')
+        fi
         echo "$greeting"
         echo "greeting=$greeting" >> "$GITHUB_OUTPUT"
+        echo "greeted-at=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
 
     - name: Show where this action lives on the runner
       shell: bash

@@ -15,6 +15,7 @@ jobs:
         uses: ./actions/hello-composite
         with:
           name: ${{ github.actor }}
+          shout: "true"
 
       - name: JavaScript
         id: js
@@ -31,5 +32,6 @@ jobs:
       - name: Collect the outputs
         run: |
           echo "composite said: ${{ steps.composite.outputs.greeting }}"
+          echo "composite greeted at: ${{ steps.composite.outputs.greeted-at }}"
           echo "javascript said: ${{ steps.js.outputs.greeting }}"
           echo "docker said:     ${{ steps.docker.outputs.greeting }}"
