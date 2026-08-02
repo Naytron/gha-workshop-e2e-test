@@ -1,0 +1,107 @@
+# Lab 9 solution — AI issue triage, powered by Copilot in Actions.
+# Copy to .github/workflows/issue-triage.yml
+#
+# On every new issue: ask a model (actions/ai-inference v3, which shells out
+# to the GitHub Copilot CLI on the runner) which labels fit, then apply them
+# and leave a short explanatory comment.
+#
+# REQUIRES ▸ repo secret COPILOT_GITHUB_TOKEN — a fine-grained PAT whose only
+# permission is the account-level "Copilot Requests: read" (see Lab 9 §9.1).
+#
+# SECURITY NOTE ▸ the issue title/body are UNTRUSTED INPUT. They go into the
+# prompt as data via templating — never into shell commands or expressions —
+# and the model's output is re-validated in code against a label allowlist,
+# so a malicious issue can't make this workflow do anything except mislabel
+# itself. The CLI runs with NO tools allowed (the action's default).
+name: AI Issue Triage
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read # read prompts/ from the repo
+  issues: write # apply labels + comment
+
+concurrency:
+  group: triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+
+      # The Copilot CLI is not pre-installed on hosted runners.
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Classify issue with Copilot
+        id: ai
+        uses: actions/ai-inference@2c43c91ae16266ca159d311430343c67a5ffa222 # v3
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        with:
+          prompt-file: ./prompts/issue-triage.prompt.yml
+          # Issue text is passed as template variables — data, not instructions.
+          input: |
+            title: ${{ toJSON(github.event.issue.title) }}
+            body: ${{ toJSON(github.event.issue.body) }}
+
+      - name: Apply labels and comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AI_RESPONSE: ${{ steps.ai.outputs.response }}
+        with:
+          script: |
+            const allowed = new Set(["bug", "enhancement", "question", "documentation"]);
+
+            // Nothing enforces the model's output shape — extract defensively.
+            // Models often wrap JSON in ```fences``` or add prose around it.
+            function extractJson(text) {
+              const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+              const candidate = (fenced ? fenced[1] : text).trim();
+              const start = candidate.indexOf("{");
+              const end = candidate.lastIndexOf("}");
+              if (start === -1 || end <= start) throw new Error("no JSON object in response");
+              return JSON.parse(candidate.slice(start, end + 1));
+            }
+
+            let result;
+            try {
+              result = extractJson(process.env.AI_RESPONSE ?? "");
+            } catch (error) {
+              core.warning(`Model returned unusable output; skipping triage. ${error}`);
+              return;
+            }
+            // Trust nothing: re-validate the model output before acting on it.
+            const labels = (Array.isArray(result.labels) ? result.labels : [])
+              .filter((l) => allowed.has(l))
+              .slice(0, 2);
+            if (labels.length === 0) {
+              core.notice("Model suggested no valid labels; leaving issue untouched.");
+              return;
+            }
+            const reason = String(result.reason ?? "(no rationale returned)").slice(0, 500);
+            await github.rest.issues.addLabels({
+              ...context.repo,
+              issue_number: context.issue.number,
+              labels,
+            });
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: [
+                `🤖 Auto-triage suggested label(s): ${labels.map((l) => `\`${l}\``).join(", ")}`,
+                "",
+                `> ${reason}`,
+                "",
+                "_Suggested by Copilot in Actions — a human should confirm._",
+              ].join("\n"),
+            });

@@ -1,0 +1,47 @@
+# Lab 3 solution — environment-gated simulated deployment.
+# Requires two environments in repo settings:
+#   staging     — no protection rules, secret DEPLOY_TARGET
+#   production  — required reviewer(s),  secret DEPLOY_TARGET
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false # never cancel a half-finished deploy
+
+jobs:
+  deploy-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - name: Simulated deploy
+        env:
+          TARGET: ${{ secrets.DEPLOY_TARGET }}
+        run: |
+          echo "Deploying to $TARGET (staging)"
+          echo "Deployed by ${{ github.actor }} from run ${{ github.run_id }}"
+
+  deploy-production:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: deploy-staging
+    environment:
+      name: production # ⏸️ run pauses here until a reviewer approves
+      url: https://prod.example.com
+    steps:
+      - name: Simulated deploy
+        env:
+          TARGET: ${{ secrets.DEPLOY_TARGET }}
+        run: |
+          echo "Deploying to $TARGET (production)"
+          echo "Deployed by ${{ github.actor }} from run ${{ github.run_id }}"

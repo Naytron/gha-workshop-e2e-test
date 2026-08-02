@@ -1,0 +1,41 @@
+# Shipped with the template. Proves Actions is enabled in your copy (Lab 00)
+# and gives you a first look at contexts, logs, and the run graph (Lab 1).
+name: Hello World
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "labs/**"
+      - "solutions/**"
+      - "**.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  greet:
+    name: Greet the actor
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Pinned to a full commit SHA (tag in the comment) — Lab 1 explains why.
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Say hello
+        run: echo "Hello, ${{ github.actor }} 👋"
+
+      - name: Inspect the event context
+        run: |
+          echo "Event that triggered me : ${{ github.event_name }}"
+          echo "Repository              : ${{ github.repository }}"
+          echo "Ref                     : ${{ github.ref }}"
+          echo "Commit SHA              : ${{ github.sha }}"
+          echo "Runner OS               : ${{ runner.os }}"
+
+      - name: Dump the full github context (expand me in the logs!)
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"

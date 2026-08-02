@@ -1,0 +1,27 @@
+# Lab 7 solution — routes a job to your self-hosted runner.
+# ⚠️ Use this in a PRIVATE playground repo (e.g. runner-playground), never in
+# a public repository — fork PRs could execute code on your machine.
+name: Self-Hosted Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  where-am-i:
+    # ALL labels must match an online runner or the job queues indefinitely —
+    # which is exactly why timeout-minutes matters here.
+    runs-on: [self-hosted, linux, workshop]
+    timeout-minutes: 5
+    steps:
+      - name: Identify the machine
+        run: |
+          echo "Hello from $(hostname)"
+          echo "User: $(whoami)"
+          uname -a
+
+      - name: Inspect the (persistent!) workspace
+        # Unlike hosted runners, this directory survives between jobs.
+        run: ls -la "$GITHUB_WORKSPACE"

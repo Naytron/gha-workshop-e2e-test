@@ -1,0 +1,18 @@
+# JavaScript action: runs directly on the runner's Node.js — fastest startup
+# of the three action types. Lab 5 walks through this file.
+name: "Hello JavaScript"
+description: "Greets someone from Node.js code running directly on the runner"
+
+inputs:
+  name:
+    description: "Who to greet"
+    required: false
+    default: "world"
+
+outputs:
+  greeting:
+    description: "The full greeting that was produced"
+
+runs:
+  using: "node24"
+  main: "index.js"

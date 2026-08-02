@@ -1,0 +1,35 @@
+# Lab 1 solution — the three bugs in debug-me.yml, fixed:
+#   1. actions/checkout@v99          → a real version (pinned to the v7.0.1 SHA)
+#   2. working-directory: application → app (the folder that actually exists)
+#   3. npm run tset                   → npm test
+# Bonus hardening while we're here: explicit least-privilege permissions.
+name: Debug Me (fixed)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test the app
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run the tests
+        run: npm test

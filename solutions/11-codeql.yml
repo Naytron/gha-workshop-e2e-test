@@ -1,0 +1,46 @@
+# Lab 11 solution — CodeQL code scanning for the sample app.
+# Copy to .github/workflows/codeql.yml
+#
+# Scans JavaScript on PRs and pushes to main, plus a weekly sweep. Findings
+# appear under Security → Code scanning; on PRs they surface as checks with
+# Copilot Autofix suggestions attached (public repos, or private with GHAS).
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * 1" # weekly sweep — catches newly added CodeQL queries
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write # upload SARIF results
+      packages: read # required to fetch CodeQL query packs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ea14db8afdef5d462e69d78c4ca45002d4522418 # v4.37.4
+        with:
+          languages: javascript-typescript
+          # security-extended adds the queries most likely to flag the
+          # Lab 11 planted vulnerability class promptly.
+          queries: security-extended
+
+      - name: Run analysis
+        uses: github/codeql-action/analyze@ea14db8afdef5d462e69d78c4ca45002d4522418 # v4.37.4
+        with:
+          category: "/language:javascript-typescript"

@@ -1,0 +1,26 @@
+# Lab 4 solution — calls the reusable workflow.
+# Copy to .github/workflows/use-reusable.yml (alongside reusable-build.yml).
+name: Use Reusable
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  call-build:
+    # Same-repo reference: resolved at the caller's own commit.
+    # Cross-repo form: owner/repo/.github/workflows/reusable-build.yml@v1
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      node-version: "24.x"
+      upload-artifact: true
+
+  report:
+    needs: call-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Use the reusable workflow's output
+        run: echo "The build produced artifact ${{ needs.call-build.outputs.artifact-name }}"

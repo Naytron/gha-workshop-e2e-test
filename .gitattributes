@@ -1,0 +1,4 @@
+# Keep shell scripts LF even when cloned on Windows — the Docker container
+# action and runner setup script break with CRLF line endings.
+*.sh text eol=lf
+Jenkinsfile text eol=lf

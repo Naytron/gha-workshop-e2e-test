@@ -1,0 +1,68 @@
+// Jenkins declarative pipeline for the workshop app.
+// Lab 6 asks you to translate ONE of the files in this folder into a
+// GitHub Actions workflow. Concept mapping:
+//
+//   Jenkins                      GitHub Actions
+//   ---------------------------  --------------------------------------
+//   pipeline {}                  a workflow file in .github/workflows/
+//   agent { label 'linux' }      runs-on: ubuntu-latest
+//   stage / steps                jobs.<id> / steps
+//   tools { nodejs '22' }        actions/setup-node
+//   environment {}               env:
+//   post { always {} }           if: always()
+//   archiveArtifacts             actions/upload-artifact
+//   triggers { cron(...) }       on: schedule
+//   when { branch 'main' }       if: github.ref == 'refs/heads/main'
+
+pipeline {
+    agent { label 'linux' }
+
+    triggers {
+        cron('H 2 * * 1-5')
+    }
+
+    environment {
+        APP_DIR = 'app'
+        NODE_ENV = 'test'
+    }
+
+    tools {
+        nodejs '22'
+    }
+
+    stages {
+        stage('Install') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build') {
+            when { branch 'main' }
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm run build'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            archiveArtifacts artifacts: 'app/dist/**', fingerprint: true
+        }
+        always {
+            echo "Pipeline finished with status: ${currentBuild.currentResult}"
+        }
+    }
+}

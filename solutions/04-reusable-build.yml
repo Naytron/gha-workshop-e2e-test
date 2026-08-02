@@ -1,0 +1,59 @@
+# Lab 4 solution — a reusable workflow (only runs when called via workflow_call).
+# Copy to .github/workflows/reusable-build.yml and invoke from 04-caller.yml.
+name: Reusable Build
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Node.js version to build with"
+        type: string
+        default: "24.x"
+      upload-artifact:
+        description: "Upload app/dist as a run artifact"
+        type: boolean
+        default: false
+    outputs:
+      artifact-name:
+        description: "Name of the uploaded dist artifact"
+        value: ${{ jobs.build.outputs.artifact-name }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build with Node ${{ inputs.node-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: app
+    outputs:
+      artifact-name: ${{ steps.meta.outputs.name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run build
+
+      - name: Compute artifact name
+        id: meta
+        run: echo "name=dist-node-${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload dist
+        if: inputs.upload-artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.meta.outputs.name }}
+          path: app/dist/
+          retention-days: 7

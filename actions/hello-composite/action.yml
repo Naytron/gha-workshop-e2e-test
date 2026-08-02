@@ -1,0 +1,32 @@
+# Composite action: bundles multiple steps behind one `uses:` reference.
+# Composite actions are the easiest way to share repeated step sequences.
+# Lab 5 walks through this file line by line.
+name: "Hello Composite"
+description: "Greets someone using plain shell steps — no code to compile, no container to build"
+
+inputs:
+  name:
+    description: "Who to greet"
+    required: false
+    default: "world"
+
+outputs:
+  greeting:
+    description: "The full greeting that was produced"
+    # Composite actions must map outputs from a step explicitly:
+    value: ${{ steps.build-greeting.outputs.greeting }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build the greeting
+      id: build-greeting
+      shell: bash # every run step in a composite action MUST declare its shell
+      run: |
+        greeting="Hello, ${{ inputs.name }}, from a composite action!"
+        echo "$greeting"
+        echo "greeting=$greeting" >> "$GITHUB_OUTPUT"
+
+    - name: Show where this action lives on the runner
+      shell: bash
+      run: echo "This action was checked out to ${{ github.action_path }}"

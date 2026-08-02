@@ -1,0 +1,76 @@
+# Azure Pipelines definition for the workshop app.
+# Lab 6 asks you to translate ONE of the files in this folder into a
+# GitHub Actions workflow. Concept mapping:
+#
+#   Azure Pipelines              GitHub Actions
+#   ---------------------------  --------------------------------------
+#   trigger:                     on: push
+#   pr:                          on: pull_request
+#   pool.vmImage                 runs-on
+#   stages / jobs / steps        jobs / steps  (Actions has no stage layer;
+#                                use `needs:` between jobs instead)
+#   task: UseNode@1              actions/setup-node
+#   variables:                   env:
+#   strategy.matrix              strategy.matrix (keys become matrix.<key>)
+#   PublishBuildArtifacts@1      actions/upload-artifact
+#   condition: succeeded()       default behavior; `if:` for anything else
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  appDir: app
+
+stages:
+  - stage: CI
+    displayName: Build and test
+    jobs:
+      - job: Test
+        displayName: Test on Node
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          matrix:
+            node_22:
+              nodeVersion: 22.x
+            node_24:
+              nodeVersion: 24.x
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: $(nodeVersion)
+            displayName: Use Node.js $(nodeVersion)
+
+          - script: npm ci
+            workingDirectory: $(appDir)
+            displayName: Install dependencies
+
+          - script: npm test
+            workingDirectory: $(appDir)
+            displayName: Run tests
+
+      - job: Build
+        displayName: Build distributable
+        dependsOn: Test
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: 24.x
+
+          - script: npm ci && npm run build
+            workingDirectory: $(appDir)
+            displayName: Build
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: $(appDir)/dist
+              artifactName: dist

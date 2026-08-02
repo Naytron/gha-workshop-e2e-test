@@ -1,0 +1,7 @@
+{
+    "name": "Node CI (Org Starter)",
+    "description": "Organization-standard Node.js CI: matrix test with npm caching and least-privilege permissions.",
+    "iconName": "node-ci",
+    "categories": ["ci", "JavaScript"],
+    "filePatterns": ["package.json$"]
+}

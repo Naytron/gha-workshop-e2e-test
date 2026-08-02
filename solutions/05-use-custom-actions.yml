@@ -1,0 +1,45 @@
+# Lab 5 solution — exercises all three local action types, including the
+# "extend one" additions (shout input + greeted-at output on the composite).
+# Note: the extended inputs/outputs only work after you've made the Lab 5.3
+# changes to actions/hello-composite/action.yml.
+name: Try Custom Actions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  try-them-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Local actions are referenced by path, so the repo must be checked out first
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Composite action (extended with shout)
+        id: composite
+        uses: ./actions/hello-composite
+        with:
+          name: ${{ github.actor }}
+          shout: "true"
+
+      - name: JavaScript action
+        id: js
+        uses: ./actions/hello-javascript
+        with:
+          name: ${{ github.actor }}
+
+      - name: Docker container action
+        id: docker
+        uses: ./actions/hello-docker
+        with:
+          name: ${{ github.actor }}
+
+      - name: Collect the outputs
+        run: |
+          echo "composite said:  ${{ steps.composite.outputs.greeting }}"
+          echo "greeted at:      ${{ steps.composite.outputs.greeted-at }}"
+          echo "javascript said: ${{ steps.js.outputs.greeting }}"
+          echo "docker said:     ${{ steps.docker.outputs.greeting }}"

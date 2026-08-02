@@ -1,0 +1,20 @@
+# Docker container action: the workflow builds this image from the Dockerfile
+# at job time, then runs the container. Slowest startup, but the action can
+# use ANY language or system dependency. Linux runners only. Lab 5 walks
+# through this file.
+name: "Hello Docker"
+description: "Greets someone from inside a container built on the fly"
+
+inputs:
+  name:
+    description: "Who to greet"
+    required: false
+    default: "world"
+
+outputs:
+  greeting:
+    description: "The full greeting that was produced"
+
+runs:
+  using: "docker"
+  image: "Dockerfile"

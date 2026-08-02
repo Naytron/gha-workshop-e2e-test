@@ -1,0 +1,52 @@
+# GitLab CI definition for the workshop app.
+# Lab 6 asks you to translate ONE of the files in this folder into a
+# GitHub Actions workflow. Concept mapping:
+#
+#   GitLab CI                    GitHub Actions
+#   ---------------------------  --------------------------------------
+#   stages: / stage:             jobs + needs: (Actions has no stage list)
+#   image: node:24               container: node:24  (or setup-node on the VM)
+#   before_script:               just more steps
+#   rules: if $CI_COMMIT_BRANCH  on: push: branches / if: conditions
+#   cache: paths                 actions/cache
+#   artifacts: paths             actions/upload-artifact
+#   parallel: matrix             strategy.matrix
+
+stages:
+  - test
+  - build
+
+default:
+  image: node:24-alpine
+
+variables:
+  APP_DIR: app
+
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - app/.npm/
+
+test:
+  stage: test
+  parallel:
+    matrix:
+      - NODE_IMAGE: ["node:22-alpine", "node:24-alpine"]
+  image: $NODE_IMAGE
+  script:
+    - cd $APP_DIR
+    - npm ci --cache .npm --prefer-offline
+    - npm test
+
+build:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - cd $APP_DIR
+    - npm ci --cache .npm --prefer-offline
+    - npm run build
+  artifacts:
+    paths:
+      - app/dist/
+    expire_in: 1 week
