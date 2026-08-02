@@ -10,4 +10,5 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Show environment (PowerShell is the default shell)
-        run: Get-ChildItem Env: | Select-Object -First 5
+        run: |
+          Get-ChildItem Env: | Select-Object -First 5
