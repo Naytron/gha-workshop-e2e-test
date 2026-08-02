@@ -1,0 +1,14 @@
+name: Token Demo
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  file-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: File an issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --repo "$GITHUB_REPOSITORY" --title "Hello from Actions" --body "Filed by run ${{ github.run_id }}"
