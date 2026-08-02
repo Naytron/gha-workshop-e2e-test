@@ -41,10 +41,11 @@ export const server = createServer((req, res) => {
   }
 
   if (url.pathname === "/echo") {
-    // Echo back whatever the caller sent us. What could go wrong?
+    // Echo the caller's message back as plain text so it is never
+    // interpreted as HTML (fixes reflected XSS, CWE-79).
     const message = url.searchParams.get("message") ?? "";
-    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-    res.end(`<h1>You said:</h1><p>${message}</p>`);
+    res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
+    res.end(`You said: ${message}`);
     return;
   }
 
