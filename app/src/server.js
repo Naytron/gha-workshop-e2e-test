@@ -40,6 +40,14 @@ export const server = createServer((req, res) => {
     return;
   }
 
+  if (url.pathname === "/echo") {
+    // Echo back whatever the caller sent us. What could go wrong?
+    const message = url.searchParams.get("message") ?? "";
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    res.end(`<h1>You said:</h1><p>${message}</p>`);
+    return;
+  }
+
   res.writeHead(404, { "content-type": "application/json" });
   res.end(JSON.stringify({ error: "not found" }));
 });
